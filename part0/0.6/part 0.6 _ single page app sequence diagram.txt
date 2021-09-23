@@ -1,0 +1,21 @@
+title part 0.6 | single page app sequence diagram
+
+note over browser:
+...
+browser executes the event handler
+that renders notes to display
+end note
+
+note over browser:
+user inputs new note
+browser rerenders the note list
+end note
+
+browser->server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+
+note over server:
+Server received data in JSON format
+JS file prevents GET request
+end note
+server-->browser: 201 - new_note created
+
