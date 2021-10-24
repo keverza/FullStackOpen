@@ -4,24 +4,26 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const helper = require('./test_helper')
+const jwt = require('jsonwebtoken')
 
 const api = supertest(app)
 
 const Blog = require('../models/blog')
+const globals = {}
 
 beforeEach(async () => {
-  await Blog.deleteMany({})
-  console.log('database cleared')
 
-// const blogObjects = helper.initialBlogs
-//     .map(blog => new Blog(blog))
-//   const promiseArray = blogObjects.map(blog => blog.save())
-//   await Promise.all(promiseArray)
+  const savedUsers = await helper.usersInDb()
 
-  for (let blog of helper.initialBlogs) {
-    let blogObject = new Blog(blog)
-    await blogObject.save()
+  const userForTest = {
+    username: savedUsers[0].username,
+    id: savedUsers[0].id,
   }
+
+  const token = jwt.sign(userForTest, process.env.SECRET)
+
+  globals.token = `bearer ${token}`
+  globals.tokenId = userForTest.id
 })
 
 //   let blogObject = new Blog(helper.initialBlogs[0])
@@ -62,6 +64,7 @@ describe('testing blogs validations', () => {
     console.log(newBlog)
     await api
       .post('/')
+      .set('Authorization', globals.token)
       .set('Content-Type', 'application/json')
       .send(newBlog)
       .expect('Content-Type', /application\/json/)
@@ -80,6 +83,7 @@ describe('testing blogs validations', () => {
 
     const response = await api
       .post('/')
+      .set('Authorization', globals.token)
       .set('Content-Type', 'application/json')
       .send(newBlog)
       .expect('Content-Type', /application\/json/)
@@ -92,6 +96,7 @@ describe('testing blogs validations', () => {
     const newBlog = helper.invalidBlog
     await api
       .post('/')
+      .set('Authorization', globals.token)
       .send(newBlog)
       .set('Content-Type', 'application/json')
       .expect(400)
